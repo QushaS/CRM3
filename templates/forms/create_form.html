@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Создание формы{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header bg-transparent">
+        <h5 class="mb-0">Создание новой формы</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" id="createFormForm">
+            <div class="mb-4">
+                <label class="form-label">Название формы</label>
+                <input type="text" name="name" class="form-control" required>
+                <div class="form-text">Например: Запись на стрижку, Заказ товара</div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">Описание</label>
+                <textarea name="description" class="form-control" rows="3"></textarea>
+                <div class="form-text">Опишите назначение формы</div>
+            </div>
+
+            <div class="border-bottom mb-4"></div>
+            
+            <div id="formFields">
+                <!-- Здесь будут добавляться поля формы -->
+            </div>
+
+            <button type="button" class="btn btn-light mb-4" onclick="addField()">
+                <i class="fas fa-plus me-2"></i>Добавить поле
+            </button>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('forms') }}" class="btn btn-light">Отмена</a>
+                <button type="submit" class="btn btn-primary">Создать форму</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<template id="fieldTemplate">
+    <div class="card mb-3 form-field">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Название поля</label>
+                    <input type="text" name="field_name[]" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Тип поля</label>
+                    <select name="field_type[]" class="form-select" onchange="toggleOptions(this)">
+                        <option value="text">Текст</option>
+                        <option value="email">Email</option>
+                        <option value="tel">Телефон</option>
+                        <option value="date">Дата</option>
+                        <option value="time">Время</option>
+                        <option value="select">Выбор из списка</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Placeholder</label>
+                    <input type="text" name="field_placeholder[]" class="form-control">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="form-check mb-2 me-3">
+                        <input type="checkbox" name="field_required[]" class="form-check-input">
+                        <label class="form-check-label">Обязательное</label>
+                    </div>
+                    <button type="button" class="btn btn-light" onclick="removeField(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="col-12 options-container d-none">
+                    <label class="form-label">Варианты выбора</label>
+                    <textarea name="field_options[]" class="form-control" 
+                              placeholder="Введите варианты, каждый с новой строки"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+function addField() {
+    const template = document.querySelector('#fieldTemplate');
+    const fieldsContainer = document.querySelector('#formFields');
+    const clone = template.content.cloneNode(true);
+    fieldsContainer.appendChild(clone);
+}
+
+function removeField(button) {
+    button.closest('.form-field').remove();
+}
+
+function toggleOptions(select) {
+    const optionsContainer = select.closest('.row').querySelector('.options-container');
+    optionsContainer.classList.toggle('d-none', select.value !== 'select');
+}
+
+// Добавляем первое поле при загрузке страницы
+document.addEventListener('DOMContentLoaded', addField);
+</script>
+{% endblock %}

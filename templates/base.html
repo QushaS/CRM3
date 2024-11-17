@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM система</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* Основная цветовая схема */
+            --primary-color: #2563eb;          /* Спокойный синий */
+            --primary-hover: #1d4ed8;          /* Темно-синий для ховера */
+            --secondary-color: #64748b;        /* Нейтральный серый */
+            --accent-color: #0ea5e9;           /* Яркий голубой для акцентов */
+
+            /* Цвета статусов */
+            --status-new: #2563eb;             /* Синий */
+            --status-progress: #eab308;        /* Желтый */
+            --status-completed: #22c55e;       /* Зеленый */
+            --status-pending: #f97316;         /* Оранжевый */
+
+            /* Фоновые цвета */
+            --bg-sidebar: #ffffff;             /* Белый фон сайдбара */
+            --bg-main: #f8fafc;               /* Светло-серый фон основного контента */
+            --bg-card: #ffffff;               /* Белый фон карточек */
+
+            /* Цвета текста */
+            --text-primary: #1e293b;          /* Основной цвет текста */
+            --text-secondary: #64748b;        /* Вторичный цвет текста */
+            --text-light: #94a3b8;           /* Светлый текст */
+
+            /* Границы и тени */
+            --border-color: #e2e8f0;         /* Цвет границ */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+            --sidebar-width: 250px;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+        }
+
+        .sidebar .nav-link {
+            color: var(--text-secondary);
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: var(--bg-main);
+            color: var(--primary-color);
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stats-card {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stats-card .icon {
+            color: var(--primary-color);
+            opacity: 0.1;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            margin: -2rem -2rem 2rem -2rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-light {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-light:hover {
+            background-color: var(--bg-main);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .status-badge {
+            padding: 0.5em 1em;
+            border-radius: 999px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .status-badge.bg-primary { background-color: var(--status-new) !important; }
+        .status-badge.bg-warning { background-color: var(--status-progress) !important; }
+        .status-badge.bg-success { background-color: var(--status-completed) !important; }
+        .status-badge.bg-secondary { background-color: var(--status-pending) !important; }
+
+        .table thead th {
+            background-color: var(--bg-main);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-group-text {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        /* Стили для панели статистики */
+        .stats-card:nth-child(1) { border-left-color: #2563eb; }
+        .stats-card:nth-child(2) { border-left-color: #0ea5e9; }
+        .stats-card:nth-child(3) { border-left-color: #22c55e; }
+
+        .stats-card:nth-child(1) .icon { color: #2563eb; }
+        .stats-card:nth-child(2) .icon { color: #0ea5e9; }
+        .stats-card:nth-child(3) .icon { color: #22c55e; }
+
+        /* Стили для профиля пользователя */
+        .user-profile {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background-color: var(--bg-main);
+        }
+
+        .user-profile img {
+            border: 2px solid var(--border-color);
+        }
+
+        /* Анимации */
+        .nav-link, .btn, .card {
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Стили для алертов */
+        .alert {
+            border: none;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background-color: rgba(37, 99, 235, 0.1);
+            border-left-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="sidebar">
+        <!-- Профиль пользователя с эмодзи вместо аватара -->
+        <div class="user-profile mb-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="profile-emoji">👨‍💻</div>
+                <div class="d-flex flex-column">
+                    <span class="fw-semibold">{{ current_user.username }}</span>
+                    <small class="text-muted">Администратор</small>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm w-100">
+                <i class="fas fa-sign-out-alt me-2"></i>Выйти
+            </a>
+        </div>
+
+        <!-- Разделитель -->
+        <div class="border-bottom mb-4"></div>
+
+        <!-- Навигация -->
+        <nav class="nav flex-column">
+    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+       href="{{ url_for('dashboard') }}">
+        <i class="fas fa-home me-2"></i> Панель управления
+    </a>
+    <a class="nav-link {% if request.endpoint == 'customers' %}active{% endif %}"
+       href="{{ url_for('customers') }}">
+        <i class="fas fa-users me-2"></i> Клиенты
+    </a>
+    <a class="nav-link {% if request.endpoint == 'orders' %}active{% endif %}"
+       href="{{ url_for('orders') }}">
+        <i class="fas fa-shopping-cart me-2"></i> Заказы
+    </a>
+    <a class="nav-link {% if request.endpoint == 'tasks' %}active{% endif %}"
+       href="{{ url_for('tasks') }}">
+        <i class="fas fa-tasks me-2"></i> Задачи
+    </a>
+    <a class="nav-link {% if 'forms' in request.endpoint %}active{% endif %}"
+       href="{{ url_for('forms') }}">
+        <i class="fas fa-wpforms me-2"></i> Формы
+    </a>
+</nav>
+
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h2 class="mb-0">{% block title %}{% endblock %}</h2>
+            <!-- Удалим профиль отсюда -->
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

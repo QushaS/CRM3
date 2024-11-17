@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% block title %}Панель управления{% endblock %}
+{% block content %}
+<!-- Статистика -->
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Всего клиентов</h6>
+                <h3 class="mb-0">{{ customers }}</h3>
+                <i class="fas fa-users icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Общая сумма заказов</h6>
+                <h3 class="mb-0">{{ total_orders_sum | currency_rub }}</h3>
+                <i class="fas fa-shopping-cart icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Активные задачи</h6>
+                <h3 class="mb-0">{{ tasks }}</h3>
+                <i class="fas fa-tasks icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Новые заявки</h6>
+                <h3 class="mb-0">{{ new_submissions }}</h3>
+                <i class="fas fa-wpforms icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- График прибыли -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Динамика прибыли за месяц</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-light active" data-period="month">Месяц</button>
+                        <button type="button" class="btn btn-sm btn-light" data-period="week">Неделя</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="profitChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Активные формы и последние заявки -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Активные формы</h5>
+                    <a href="{{ url_for('forms') }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-2"></i>Управление формами
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for form in active_forms %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ form.name }}</h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-muted">{{ form.submissions|length }} заявок</small>
+                                {% set new_count = form.submissions|selectattr('status', 'equalto', 'new')|list|length %}
+                                {% if new_count > 0 %}
+                                <span class="badge bg-primary">{{ new_count }} новых</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-light"
+                                    onclick="copyFormLink('{{ url_for('public_form', slug=form.slug, _external=True) }}')"
+                                    title="Копировать ссылку">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <a href="{{ url_for('form_submissions', slug=form.slug) }}"
+                               class="btn btn-sm btn-light"
+                               title="Просмотр заявок">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted mb-3">
+                            <i class="fas fa-clipboard-list fa-3x"></i>
+                        </div>
+                        <p class="text-muted mb-3">У вас пока нет активных форм</p>
+                        <a href="{{ url_for('create_form') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>Создать форму
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Последние заявки</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                            Все формы
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item active" href="#">Все формы</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% for form in active_forms %}
+                            <li><a class="dropdown-item" href="#">{{ form.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Форма</th>
+                                <th>Данные</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in recent_submissions %}
+                            <tr>
+                                <td>{{ submission.form.name }}</td>
+                                <td>
+                                    {% set first_field = submission.data.keys()|list|first %}
+                                    <div class="text-truncate" style="max-width: 200px;">
+                                        {{ submission.data[first_field] }}
+                                        {% if submission.data|length > 1 %}
+                                        <span class="text-muted">+{{ submission.data|length - 1 }} поля</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ submission.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                <td>
+                                    <span class="badge rounded-pill {% if submission.status == 'new' %}bg-primary
+                                                 {% elif submission.status == 'processed' %}bg-warning
+                                                 {% elif submission.status == 'completed' %}bg-success
+                                                 {% else %}bg-secondary{% endif %}">
+                                        {{ submission.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <p class="text-muted mb-0">Нет новых заявок</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Последние заказы -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Последние заказы</h5>
+                    <a href="{{ url_for('orders') }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-list me-2"></i>Все заказы
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Клиент</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="profile-emoji me-2">👤</div>
+                                        {{ order.customer.name }}
+                                    </div>
+                                </td>
+                                <td>{{ order.amount | currency_rub }}</td>
+                                <td>
+                                    <span class="badge rounded-pill {% if order.status == 'new' %}bg-primary
+                                                 {% elif order.status == 'in_progress' %}bg-warning
+                                                 {% elif order.status == 'completed' %}bg-success
+                                                 {% else %}bg-secondary{% endif %}">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                                <td>{{ order.created_at.strftime('%d.%m.%Y') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <p class="text-muted mb-0">Нет последних заказов</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- График и вспомогательные скрипты -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.0/apexcharts.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация графика
+    fetch('/api/profit-data')
+        .then(response => response.json())
+        .then(data => {
+            const options = {
+                series: [{
+                    name: 'Выручка',
+                    data: data.revenue,
+                    type: 'line'
+                }, {
+                    name: 'Расходы',
+                    data: data.costs,
+                    type: 'line'
+                }, {
+                    name: 'Прибыль',
+                    data: data.profit,
+                    type: 'area'
+                }],
+                chart: {
+                    height: 300,
+                    type: 'line',
+                    toolbar: {
+                        show: false
+                    },
+                    fontFamily: 'inherit'
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: [2, 2, 2]
+                },
+                fill: {
+                    type: ['solid', 'solid', 'gradient'],
+                    opacity: [1, 1, 0.3]
+                },
+                colors: ['#2563eb', '#ef4444', '#22c55e'],
+                xaxis: {
+                    categories: data.dates,
+                    labels: {
+                        style: {
+                            colors: '#64748b',
+                            fontSize: '12px'
+                        }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function(value) {
+                            return new Intl.NumberFormat('ru-RU', {
+                                style: 'currency',
+                                currency: 'RUB',
+                                maximumFractionDigits: 0
+                            }).format(value);
+                        },
+                        style: {
+                            colors: '#64748b',
+                            fontSize: '12px'
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right',
+                    fontSize: '14px'
+                },
+                grid: {
+                    borderColor: '#e2e8f0',
+                    strokeDashArray: 4,
+                    padding: {
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 10
+                    }
+                },
+                tooltip: {
+                    theme: 'light',
+                    y: {
+                        formatter: function(value) {
+                            return new Intl.NumberFormat('ru-RU', {
+                                style: 'currency',
+                                currency: 'RUB',
+                                maximumFractionDigits: 0
+                            }).format(value);
+                        }
+                    }
+                }
+            };
+
+            const chart = new ApexCharts(document.querySelector("#profitChart"), options);
+            chart.render();
+        });
+
+    // Функция копирования ссылки
+    window.copyFormLink = function(link) {
+        navigator.clipboard.writeText(link).then(() => {
+            // Можно заменить на более красивое уведомление
+            alert('Ссылка скопирована в буфер обмена');
+        });
+    };
+});
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Панель управления{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Всего клиентов</h6>
+                <h3 class="mb-0">{{ customers }}</h3>
+                <i class="fas fa-users icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Всего заказов</h6>
+                <h3 class="mb-0">{{ orders }}</h3>
+                <i class="fas fa-shopping-cart icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Активные задачи</h6>
+                <h3 class="mb-0">{{ tasks }}</h3>
+                <i class="fas fa-tasks icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Последние заказы</h5>
+                    <a href="{{ url_for('orders') }}" class="btn btn-sm btn-primary">
+                        Все заказы
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Клиент</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="/api/placeholder/32/32" class="rounded-circle me-2" alt="Avatar">
+                                        {{ order.customer.name }}
+                                    </div>
+                                </td>
+                                <td>₽{{ "%.2f"|format(order.amount) }}</td>
+                                <td>
+                                    <span class="status-badge {% if order.status == 'new' %}bg-primary
+                                                 {% elif order.status == 'in_progress' %}bg-warning
+                                                 {% elif order.status == 'completed' %}bg-success
+                                                 {% else %}bg-secondary{% endif %}">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                                <td>{{ order.created_at.strftime('%d.%m.%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block auth_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5" 
+     style="background-color: var(--bg-main);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="text-center mb-4">{{ form.name }}</h2>
+                        {% if form.description %}
+                        <p class="text-muted text-center mb-4">{{ form.description }}</p>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('submit_form', slug=form.slug) }}">
+                            {% for field in form.fields %}
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    {{ field.name }}
+                                    {% if field.required %}
+                                    <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+
+                                {% if field.field_type == 'select' %}
+                                <select name="field_{{ field.id }}" class="form-select" 
+                                        {% if field.required %}required{% endif %}>
+                                    <option value="">Выберите...</option>
+                                    {% for option in field.options.split('\n') %}
+                                    <option value="{{ option.strip() }}">{{ option.strip() }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                {% elif field.field_type == 'time' %}
+                                <input type="{{ field.field_type }}" name="field_{{ field.id }}" 
+                                       class="form-control" placeholder="{{ field.placeholder }}"
+                                       {% if field.required %}required{% endif %}>
+
+                                {% elif field.field_type == 'date' %}
+                                <input type="{{ field.field_type }}" name="field_{{ field.id }}"
+                                       class="form-control" placeholder="{{ field.placeholder }}"
+                                       {% if field.required %}required{% endif %}>
+
+                                {% else %}
+                                <input type="{{ field.field_type }}" name="field_{{ field.id }}"
+                                       class="form-control" placeholder="{{ field.placeholder }}"
+                                       {% if field.required %}required{% endif %}>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-paper-plane me-2"></i>Отправить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

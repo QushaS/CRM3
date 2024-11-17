@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Заявки - {{ form.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Заявки: {{ form.name }}</h1>
+        <p class="text-muted mb-0">Всего заявок: {{ submissions|length }}</p>
+    </div>
+    <div class="btn-group">
+        <button class="btn btn-light" onclick="exportToExcel()">
+            <i class="fas fa-file-excel me-2"></i>Экспорт в Excel
+        </button>
+        <a href="{{ url_for('forms') }}" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Назад к формам
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        {% for field in form.fields %}
+                        <th>{{ field.name }}</th>
+                        {% endfor %}
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions %}
+                    <tr>
+                        <td>#{{ submission.id }}</td>
+                        {% for field in form.fields %}
+                        <td>{{ submission.data[field.name] }}</td>
+                        {% endfor %}
+                        <td>{{ submission.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td>
+                            <select class="form-select form-select-sm status-select" 
+                                    data-submission-id="{{ submission.id }}"
+                                    style="width: 140px;">
+                                <option value="new" {% if submission.status == 'new' %}selected{% endif %}>
+                                    Новая
+                                </option>
+                                <option value="processed" {% if submission.status == 'processed' %}selected{% endif %}>
+                                    В обработке
+                                </option>
+                                <option value="completed" {% if submission.status == 'completed' %}selected{% endif %}>
+                                    Завершена
+                                </option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-light" onclick="viewSubmission({{ submission.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-light" onclick="deleteSubmission({{ submission.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра заявки -->
+<div class="modal fade" id="submissionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Просмотр заявки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="submissionData"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Обработка изменения статуса заявки
+document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', function() {
+        const submissionId = this.dataset.submissionId;
+        const newStatus = this.value;
+        
+        fetch(`/forms/submission/${submissionId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Можно добавить уведомление об успешном обновлении
+            }
+        });
+    });
+});
+
+// Экспорт в Excel
+function exportToExcel() {
+    window.location.href = `{{ url_for('export_submissions', slug=form.slug) }}`;
+}
+
+// Просмотр заявки
+function viewSubmission(submissionId) {
+    fetch(`/forms/submission/${submissionId}`)
+        .then(response => response.json())
+        .then(data => {
+            const submissionData = document.getElementById('submissionData');
+            submissionData.innerHTML = '';
+            
+            for (const [key, value] of Object.entries(data.data)) {
+                submissionData.innerHTML += `
+                    <div class="mb-3">
+                        <label class="fw-bold">${key}</label>
+                        <p>${value}</p>
+                    </div>
+                `;
+            }
+            
+            new bootstrap.Modal(document.getElementById('submissionModal')).show();
+        });
+}
+
+// Удаление заявки
+function deleteSubmission(submissionId) {
+    if (confirm('Вы уверены, что хотите удалить эту заявку?')) {
+        fetch(`/forms/submission/${submissionId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

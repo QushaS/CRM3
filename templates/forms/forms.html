@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Мои формы{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Мои формы</h1>
+    <a href="{{ url_for('create_form') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Создать форму
+    </a>
+</div>
+
+<div class="row">
+    {% for form in forms %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ form.name }}</h5>
+                <p class="card-text text-muted">{{ form.description }}</p>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="badge {% if form.is_active %}bg-success{% else %}bg-secondary{% endif %} me-2">
+                        {{ 'Активна' if form.is_active else 'Неактивна' }}
+                    </span>
+                    <small class="text-muted">
+                        Создана: {{ form.created_at.strftime('%d.%m.%Y') }}
+                    </small>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100">
+                    <button class="btn btn-light" onclick="copyFormLink('{{ url_for('public_form', slug=form.slug, _external=True) }}')">
+                        <i class="fas fa-link me-2"></i>Копировать ссылку
+                    </button>
+                    <a href="{{ url_for('form_submissions', slug=form.slug) }}" class="btn btn-light">
+                        <i class="fas fa-list me-2"></i>Заявки
+                    </a>
+                    <button class="btn btn-light" onclick="toggleFormStatus({{ form.id }})">
+                        <i class="fas {% if form.is_active %}fa-pause{% else %}fa-play{% endif %} me-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <div class="display-1 mb-4">📋</div>
+            <h3>У вас пока нет форм</h3>
+            <p class="text-muted">Создайте свою первую форму для сбора заявок</p>
+            <a href="{{ url_for('create_form') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Создать форму
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function copyFormLink(link) {
+    navigator.clipboard.writeText(link).then(() => {
+        alert('Ссылка скопирована в буфер обмена');
+    });
+}
+
+function toggleFormStatus(formId) {
+    // Здесь будет AJAX запрос на изменение статуса формы
+}
+</script>
+{% endblock %}
